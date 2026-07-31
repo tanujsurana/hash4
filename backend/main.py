@@ -77,8 +77,35 @@ def health_check():
 
 
 @app.get("/properties")
-def get_properties():
-    return properties
+def get_properties(
+    location: str | None = None,
+    bedrooms: int | None = None,
+    max_price: int | None = None,
+):
+    filtered_properties = properties
+
+    if location:
+        filtered_properties = [
+            property_item
+            for property_item in filtered_properties
+            if property_item.location.lower() == location.lower()
+        ]
+
+    if bedrooms is not None:
+        filtered_properties = [
+            property_item
+            for property_item in filtered_properties
+            if property_item.bedrooms == bedrooms
+        ]
+
+    if max_price is not None:
+        filtered_properties = [
+            property_item
+            for property_item in filtered_properties
+            if property_item.price <= max_price
+        ]
+
+    return filtered_properties
 
 
 @app.get("/properties/{property_id}")
