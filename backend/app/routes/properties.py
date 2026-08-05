@@ -1,6 +1,9 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
-from app.data import properties
+from app.database import get_db
+from app.models import PropertyModel
 from app.schemas import Property, PropertyCreate, PropertyUpdate
 
 
@@ -15,31 +18,30 @@ def get_properties(
     location: str | None = None,
     bedrooms: int | None = None,
     max_price: int | None = None,
+    database_session: Session = Depends(get_db),
 ):
-    filtered_properties = properties
+    query = select(PropertyModel)
 
     if location:
-        filtered_properties = [
-            property_item
-            for property_item in filtered_properties
-            if property_item.location.lower() == location.lower()
-        ]
+        query = query.where(
+            PropertyModel.location.ilike(location)
+        )
 
     if bedrooms is not None:
-        filtered_properties = [
-            property_item
-            for property_item in filtered_properties
-            if property_item.bedrooms == bedrooms
-        ]
+        query = query.where(
+            PropertyModel.bedrooms == bedrooms
+        )
 
     if max_price is not None:
-        filtered_properties = [
-            property_item
-            for property_item in filtered_properties
-            if property_item.price <= max_price
-        ]
+        query = query.where(
+            PropertyModel.price <= max_price
+        )
 
-    return filtered_properties
+    query = query.order_by(PropertyModel.id)
+
+    result = database_session.execute(query)
+
+    return result.scalars().all()
 
 
 @router.post(
@@ -47,52 +49,69 @@ def get_properties(
     response_model=Property,
     status_code=status.HTTP_201_CREATED,
 )
-def create_property(property_data: PropertyCreate):
-    new_id = max(
-        (property_item.id for property_item in properties),
-        default=0,
-    ) + 1
-
-    new_property = Property(
-        id=new_id,
-        **property_data.model_dump(),
+def create_property(
+    property_data: PropertyCreate,
+    database_session: Session = Depends(get_db),
+):
+    new_property = PropertyModel(
+        **property_data.model_dump()
     )
 
-    properties.append(new_property)
+    database_session.add(new_property)
+    database_session.commit()
+    database_session.refresh(new_property)
 
     return new_property
 
 
 @router.get("/{property_id}", response_model=Property)
-def get_property(property_id: int):
-    for property_item in properties:
-        if property_item.id == property_id:
-            return property_item
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="Property not found",
+def get_property(
+    property_id: int,
+    database_session: Session = Depends(get_db),
+):
+    property_record = database_session.get(
+        PropertyModel,
+        property_id,
     )
+
+    if property_record is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Property not found",
+        )
+
+    return property_record
 
 
 @router.patch("/{property_id}", response_model=Property)
 def update_property(
     property_id: int,
     property_data: PropertyUpdate,
+    database_session: Session = Depends(get_db),
 ):
-    for index, property_item in enumerate(properties):
-        if property_item.id == property_id:
-            update_data = property_data.model_dump(exclude_unset=True)
-
-            updated_property = property_item.model_copy(
-                update=update_data
-            )
-
-            properties[index] = updated_property
-
-            return updated_property
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="Property not found",
+    property_record = database_session.get(
+        PropertyModel,
+        property_id,
     )
+
+    if property_record is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Property not found",
+        )
+
+    update_data = property_data.model_dump(
+        exclude_unset=True
+    )
+
+    for field_name, field_value in update_data.items():
+        setattr(
+            property_record,
+            field_name,
+            field_value,
+        )
+
+    database_session.commit()
+    database_session.refresh(property_record)
+
+    return property_record

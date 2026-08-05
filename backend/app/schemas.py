@@ -1,8 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
-class Property(BaseModel):
-    id: int
+class PropertyBase(BaseModel):
     title: str
     location: str
     city: str
@@ -14,16 +13,8 @@ class Property(BaseModel):
     description: str
 
 
-class PropertyCreate(BaseModel):
-    title: str
-    location: str
-    city: str
-    price: int
-    bedrooms: int
-    bathrooms: int
-    property_type: str
-    area_sqft: int
-    description: str
+class PropertyCreate(PropertyBase):
+    pass
 
 
 class PropertyUpdate(BaseModel):
@@ -36,3 +27,9 @@ class PropertyUpdate(BaseModel):
     property_type: str | None = None
     area_sqft: int | None = None
     description: str | None = None
+
+
+class Property(PropertyBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
