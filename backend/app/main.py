@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.routes import properties
+from app.routers import auth, properties
 
 
 app = FastAPI(
@@ -11,6 +11,7 @@ app = FastAPI(
 
 
 app.include_router(properties.router)
+app.include_router(auth.router)
 
 
 @app.get("/")

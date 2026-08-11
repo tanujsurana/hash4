@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict
+from datetime import datetime
 
 
 class PropertyBase(BaseModel):
@@ -27,9 +28,37 @@ class PropertyUpdate(BaseModel):
     property_type: str | None = None
     area_sqft: int | None = None
     description: str | None = None
+    status: str | None = None
 
 
 class Property(PropertyBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+
+
+class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    email: str
+    is_active: bool
+    created_at: datetime
+
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
