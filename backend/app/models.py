@@ -1,11 +1,17 @@
 from datetime import datetime
-from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 
-from sqlalchemy import DateTime, Integer, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -87,6 +93,22 @@ class PropertyModel(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+    owner_id: Mapped[int] = mapped_column(
+    ForeignKey("users.id"),
+    nullable=False,
+    index=True,
+)
+    owner: Mapped["UserModel"] = relationship(
+        back_populates="properties"
+    )
+    images: Mapped[list["PropertyImageModel"]] = relationship(
+    back_populates="property",
+    cascade="all, delete-orphan",
+    )
+    favorites: Mapped[list["FavoriteModel"]] = relationship(
+    back_populates="property",
+    cascade="all, delete-orphan",
+)
 class UserModel(Base):
     __tablename__ = "users"
 
@@ -123,4 +145,83 @@ class UserModel(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
+    )
+    properties: Mapped[list["PropertyModel"]] = relationship(
+        back_populates="owner"
+    )
+    favorites: Mapped[list["FavoriteModel"]] = relationship(
+    back_populates="user",
+    cascade="all, delete-orphan",
+)
+class PropertyImageModel(Base):
+    __tablename__ = "property_images"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    property_id: Mapped[int] = mapped_column(
+        ForeignKey("properties.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    image_url: Mapped[str] = mapped_column(
+        String(500),
+        nullable=False,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    property: Mapped["PropertyModel"] = relationship(
+        back_populates="images"
+    )
+    
+class FavoriteModel(Base):
+    __tablename__ = "favorites"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id",
+            "property_id",
+            name="uq_favorite_user_property",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    property_id: Mapped[int] = mapped_column(
+        ForeignKey("properties.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    user: Mapped["UserModel"] = relationship(
+        back_populates="favorites"
+    )
+
+    property: Mapped["PropertyModel"] = relationship(
+        back_populates="favorites"
     )

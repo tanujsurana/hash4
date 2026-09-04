@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:15
+    container_name: hash4-db
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    volumes:
+      - hash4_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  api:
+    build: .
+    container_name: hash4-backend
+    restart: unless-stopped
+    depends_on:
+      - db
+    env_file:
+      - .env
+      - .env.docker
+    ports:
+      - "8001:8000"
+
+volumes:
+  hash4_postgres_data:

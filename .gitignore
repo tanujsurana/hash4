@@ -1,5 +1,6 @@
 # Environment variables
 .env
+.env.docker
 
 # Python
 __pycache__/
@@ -20,3 +21,6 @@ dist/
 
 # Logs
 *.log
+
+# Local uploaded files
+backend/uploads/

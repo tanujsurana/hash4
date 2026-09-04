@@ -56,3 +56,12 @@ def authenticate_user(
         return None
 
     return user
+
+def get_user_by_id(
+    database_session: Session,
+    user_id: int,
+):
+    return database_session.get(
+        UserModel,
+        user_id,
+    )
