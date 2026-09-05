@@ -86,13 +86,36 @@ function FavoritesPage() {
   }
 
   return (
-    <div className="page">
-      <h1>My Favorites</h1>
+    <div className="page favorites-page">
+      <section className="favorites-header">
+        <div>
+          <p className="section-eyebrow">SAVED LISTINGS</p>
+          <h1>My Favorites</h1>
+          <p className="favorites-subtitle">
+            Keep track of the properties you like and revisit them anytime.
+          </p>
+        </div>
+
+        <div className="favorites-count">
+          <strong>{favorites.length}</strong>
+          <span>{favorites.length === 1 ? "Saved property" : "Saved properties"}</span>
+        </div>
+      </section>
 
       {favorites.length === 0 ? (
-        <p>No favorite properties yet.</p>
+        <div className="favorites-empty">
+          <div className="favorites-empty-icon">♡</div>
+          <h2>No favorites yet</h2>
+          <p>
+            Browse available properties and save the ones you want to revisit.
+          </p>
+
+          <Link to="/" className="favorites-browse-button">
+            Browse Properties
+          </Link>
+        </div>
       ) : (
-        <div className="property-grid">
+        <div className="favorites-grid">
           {favorites.map(({ property }) => {
             const preferredImage =
               property.images.find((image) =>
@@ -106,40 +129,49 @@ function FavoritesPage() {
               : rawImageUrl
 
             return (
-              <div key={property.id} className="property-card">
+              <article key={property.id} className="favorite-property-card">
                 <Link
                   to={`/properties/${property.id}`}
-                  className="property-card-link"
+                  className="favorite-property-link"
                 >
-                  {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={property.title}
-                      className="property-image"
-                      onError={(event) => {
-                        event.currentTarget.style.display = "none"
-                      }}
-                    />
-                  ) : (
-                    <div className="property-image-placeholder">
-                      No image available
+                  <div className="favorite-property-image-wrapper">
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={property.title}
+                        className="favorite-property-image"
+                        onError={(event) => {
+                          event.currentTarget.style.display = "none"
+                        }}
+                      />
+                    ) : (
+                      <div className="favorite-property-placeholder">
+                        No image available
+                      </div>
+                    )}
+
+                    <span className="favorite-property-type">
+                      {property.property_type}
+                    </span>
+                  </div>
+
+                  <div className="favorite-property-content">
+                    <h2>{property.title}</h2>
+
+                    <p className="favorite-property-location">
+                      {property.location}, {property.city}
+                    </p>
+
+                    <p className="favorite-property-price">
+                      ₹{property.price.toLocaleString("en-IN")}
+                    </p>
+
+                    <div className="favorite-property-stats">
+                      <span>{property.bedrooms} Beds</span>
+                      <span>{property.bathrooms} Baths</span>
+                      <span>{property.area_sqft} sq.ft</span>
                     </div>
-                  )}
-
-                  <h3>{property.title}</h3>
-
-                  <p>
-                    {property.location}, {property.city}
-                  </p>
-
-                  <h3>₹{property.price.toLocaleString("en-IN")}</h3>
-
-                  <p>
-                    {property.bedrooms} Beds • {property.bathrooms} Baths •{" "}
-                    {property.area_sqft} sq.ft
-                  </p>
-
-                  <p>{property.property_type}</p>
+                  </div>
                 </Link>
 
                 <button
@@ -149,7 +181,7 @@ function FavoritesPage() {
                 >
                   Remove from Favorites
                 </button>
-              </div>
+              </article>
             )
           })}
         </div>
