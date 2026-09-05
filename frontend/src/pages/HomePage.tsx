@@ -9,35 +9,83 @@ function HomePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
-  useEffect(() => {
-    async function loadProperties() {
-      try {
-        const data = await apiRequest("/properties")
-        setProperties(data)
-      } catch {
-        setError("Failed to load properties")
-      } finally {
-        setLoading(false)
-      }
-    }
+  const [search, setSearch] = useState("")
+  const [city, setCity] = useState("")
+  const [propertyType, setPropertyType] = useState("")
+  const [minPrice, setMinPrice] = useState("")
+  const [maxPrice, setMaxPrice] = useState("")
+  const [bedrooms, setBedrooms] = useState("")
+  const [sortBy, setSortBy] = useState("created_at")
+  const [sortOrder, setSortOrder] = useState("desc")
 
+  async function loadProperties(queryString = "") {
+    try {
+      setLoading(true)
+      setError("")
+
+      const endpoint = queryString
+        ? `/properties?${queryString}`
+        : "/properties"
+
+      const data = await apiRequest(endpoint)
+      setProperties(data)
+    } catch {
+      setError("Failed to load properties")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     loadProperties()
   }, [])
 
-  if (loading) {
-    return (
-      <div className="page">
-        <p>Loading properties...</p>
-      </div>
-    )
+  function handleSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    const params = new URLSearchParams()
+
+    if (search.trim()) {
+      params.set("search", search.trim())
+    }
+
+    if (city.trim()) {
+      params.set("city", city.trim())
+    }
+
+    if (propertyType.trim()) {
+      params.set("property_type", propertyType.trim())
+    }
+
+    if (minPrice) {
+      params.set("min_price", minPrice)
+    }
+
+    if (maxPrice) {
+      params.set("max_price", maxPrice)
+    }
+
+    if (bedrooms) {
+      params.set("bedrooms", bedrooms)
+    }
+
+    params.set("sort_by", sortBy)
+    params.set("sort_order", sortOrder)
+
+    loadProperties(params.toString())
   }
 
-  if (error) {
-    return (
-      <div className="page">
-        <p>{error}</p>
-      </div>
-    )
+  function handleReset() {
+    setSearch("")
+    setCity("")
+    setPropertyType("")
+    setMinPrice("")
+    setMaxPrice("")
+    setBedrooms("")
+    setSortBy("created_at")
+    setSortOrder("desc")
+
+    loadProperties()
   }
 
   return (
@@ -59,6 +107,128 @@ function HomePage() {
         </div>
       </section>
 
+      <section className="property-search-section">
+        <div className="property-search-heading">
+          <div>
+            <p className="section-eyebrow">SEARCH & FILTER</p>
+            <h2>Find the right property</h2>
+          </div>
+
+          <p>
+            Search by location, price, property type, and more.
+          </p>
+        </div>
+
+        <form
+          className="property-search-form"
+          onSubmit={handleSearch}
+        >
+          <label className="property-search-field property-search-field-wide">
+            <span>Search</span>
+            <input
+              type="text"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search title, location, or description"
+            />
+          </label>
+
+          <label className="property-search-field">
+            <span>City</span>
+            <input
+              type="text"
+              value={city}
+              onChange={(event) => setCity(event.target.value)}
+              placeholder="e.g. Chennai"
+            />
+          </label>
+
+          <label className="property-search-field">
+            <span>Property Type</span>
+            <input
+              type="text"
+              value={propertyType}
+              onChange={(event) => setPropertyType(event.target.value)}
+              placeholder="Apartment, Villa..."
+            />
+          </label>
+
+          <label className="property-search-field">
+            <span>Min Price</span>
+            <input
+              type="number"
+              value={minPrice}
+              onChange={(event) => setMinPrice(event.target.value)}
+              placeholder="Minimum"
+              min="0"
+            />
+          </label>
+
+          <label className="property-search-field">
+            <span>Max Price</span>
+            <input
+              type="number"
+              value={maxPrice}
+              onChange={(event) => setMaxPrice(event.target.value)}
+              placeholder="Maximum"
+              min="0"
+            />
+          </label>
+
+          <label className="property-search-field">
+            <span>Bedrooms</span>
+            <input
+              type="number"
+              value={bedrooms}
+              onChange={(event) => setBedrooms(event.target.value)}
+              placeholder="Any"
+              min="0"
+            />
+          </label>
+
+          <label className="property-search-field">
+            <span>Sort By</span>
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value)}
+            >
+              <option value="created_at">Newest</option>
+              <option value="price">Price</option>
+              <option value="bedrooms">Bedrooms</option>
+              <option value="area_sqft">Area</option>
+            </select>
+          </label>
+
+          <label className="property-search-field">
+            <span>Order</span>
+            <select
+              value={sortOrder}
+              onChange={(event) => setSortOrder(event.target.value)}
+            >
+              <option value="desc">High to Low</option>
+              <option value="asc">Low to High</option>
+            </select>
+          </label>
+
+          <div className="property-search-actions">
+            <button
+              type="button"
+              className="property-search-reset"
+              onClick={handleReset}
+            >
+              Reset
+            </button>
+
+            <button
+              type="submit"
+              className="property-search-submit"
+            >
+              Search Properties
+            </button>
+          </div>
+        </form>
+      </section>
+
       <section className="properties-section">
         <div className="section-heading">
           <div>
@@ -72,10 +242,18 @@ function HomePage() {
           </p>
         </div>
 
-        {properties.length === 0 ? (
+        {loading ? (
           <div className="empty-properties">
-            <h3>No properties available yet.</h3>
-            <p>New listings will appear here when they are added.</p>
+            <h3>Loading properties...</h3>
+          </div>
+        ) : error ? (
+          <div className="empty-properties">
+            <h3>{error}</h3>
+          </div>
+        ) : properties.length === 0 ? (
+          <div className="empty-properties">
+            <h3>No matching properties found.</h3>
+            <p>Try changing your search or filter options.</p>
           </div>
         ) : (
           <div className="property-grid">
