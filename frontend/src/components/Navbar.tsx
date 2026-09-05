@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import {
+  Link,
+  NavLink,
+  useNavigate,
+} from "react-router-dom"
+
 import { apiRequest } from "../services/api"
 
 type User = {
@@ -41,33 +46,93 @@ function Navbar() {
     navigate("/login")
   }
 
+  function navLinkClass({
+    isActive,
+  }: {
+    isActive: boolean
+  }) {
+    return isActive
+      ? "navbar-link navbar-link-active"
+      : "navbar-link"
+  }
+
   return (
-    <nav className="navbar">
-      <Link to="/" className="navbar-brand">
-        Hash4
-      </Link>
+    <header className="site-header">
+      <nav className="navbar">
+        <Link to="/" className="navbar-brand">
+          <span className="navbar-brand-mark">H4</span>
 
-      <div className="navbar-links">
-        <Link to="/">Properties</Link>
+          <span className="navbar-brand-text">
+            Hash4
+          </span>
+        </Link>
 
-        {isLoggedIn ? (
-          <>
-            <Link to="/favorites">Favorites</Link>
-            <Link to="/my-properties">My Properties</Link>
-            {user && <span>Hi, {user.name}</span>}
+        <div className="navbar-links">
+          <NavLink
+            to="/"
+            className={navLinkClass}
+          >
+            Properties
+          </NavLink>
 
-            <button onClick={handleLogout} className="logout-button">
-              Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
-          </>
-        )}
-      </div>
-    </nav>
+          {isLoggedIn ? (
+            <>
+              <NavLink
+                to="/favorites"
+                className={navLinkClass}
+              >
+                Favorites
+              </NavLink>
+
+              <NavLink
+                to="/my-properties"
+                className={navLinkClass}
+              >
+                My Properties
+              </NavLink>
+
+              <div className="navbar-divider" />
+
+              {user && (
+                <div className="navbar-user">
+                  <span className="navbar-user-avatar">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
+
+                  <span className="navbar-user-name">
+                    {user.name}
+                  </span>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="logout-button"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink
+                to="/login"
+                className={navLinkClass}
+              >
+                Login
+              </NavLink>
+
+              <Link
+                to="/register"
+                className="navbar-register-button"
+              >
+                Get Started
+              </Link>
+            </>
+          )}
+        </div>
+      </nav>
+    </header>
   )
 }
 
