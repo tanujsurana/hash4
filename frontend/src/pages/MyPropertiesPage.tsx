@@ -2,21 +2,23 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 
 import { apiRequest } from "../services/api"
+import PropertyCard from "../components/PropertyCard"
 import type { Property } from "../types/property"
-
-const API_URL = import.meta.env.VITE_API_URL
 
 function MyPropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [actionError, setActionError] = useState("")
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
   useEffect(() => {
     async function loadMyProperties() {
       try {
         const data = await apiRequest("/properties/my-properties")
         setProperties(data)
-      } catch {
+      } catch (err) {
+        console.error(err)
         setError("Failed to load your properties")
       } finally {
         setLoading(false)
@@ -25,6 +27,38 @@ function MyPropertiesPage() {
 
     loadMyProperties()
   }, [])
+
+  async function handleDelete(property: Property) {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${property.title}"?`
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setActionError("")
+    setDeletingId(property.id)
+
+    try {
+      await apiRequest(`/properties/${property.id}`, {
+        method: "DELETE",
+      })
+
+      setProperties((currentProperties) =>
+        currentProperties.filter(
+          (currentProperty) => currentProperty.id !== property.id
+        )
+      )
+    } catch (err) {
+      console.error(err)
+      setActionError(
+        "Unable to delete this property. Please try again."
+      )
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -55,19 +89,31 @@ function MyPropertiesPage() {
           </p>
         </div>
 
-        <Link to="/create-property" className="create-property-button">
+        <Link
+          to="/create-property"
+          className="create-property-button"
+        >
           + Create Property
         </Link>
       </section>
 
       <div className="my-properties-summary">
-        <div>
-          <span className="summary-number">{properties.length}</span>
-          <span className="summary-label">
-            {properties.length === 1 ? "Property listed" : "Properties listed"}
-          </span>
-        </div>
+        <span className="summary-number">
+          {properties.length}
+        </span>
+
+        <span className="summary-label">
+          {properties.length === 1
+            ? " Property listed"
+            : " Properties listed"}
+        </span>
       </div>
+
+      {actionError && (
+        <div className="my-properties-action-error">
+          {actionError}
+        </div>
+      )}
 
       {properties.length === 0 ? (
         <div className="my-properties-empty">
@@ -77,82 +123,50 @@ function MyPropertiesPage() {
             Create your first property listing and it will appear here.
           </p>
 
-          <Link to="/create-property" className="create-property-button">
+          <Link
+            to="/create-property"
+            className="create-property-button"
+          >
             + Create Property
           </Link>
         </div>
       ) : (
-        <div className="my-properties-grid">
-          {properties.map((property) => {
-            const preferredImage =
-              property.images.find((image) =>
-                image.signed_url?.startsWith("http")
-              ) ?? property.images[0]
+        <div className="property-grid">
+          {properties.map((property) => (
+            <div
+              key={property.id}
+              className="my-property-wrapper"
+            >
+              <PropertyCard property={property} />
 
-            const rawImageUrl = preferredImage?.signed_url
+              <div className="my-property-actions">
+                <Link
+                  to={`/properties/${property.id}/edit`}
+                  className="property-action-button"
+                >
+                  Edit
+                </Link>
 
-            const imageUrl = rawImageUrl?.startsWith("/uploads/")
-              ? `${API_URL}${rawImageUrl}`
-              : rawImageUrl
+                <Link
+                  to={`/properties/${property.id}`}
+                  className="property-action-button"
+                >
+                  View
+                </Link>
 
-            return (
-              <Link
-                key={property.id}
-                to={`/properties/${property.id}`}
-                className="my-property-card"
-              >
-                <div className="my-property-image-wrapper">
-                  {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={property.title}
-                      className="my-property-image"
-                      onError={(event) => {
-                        event.currentTarget.style.display = "none"
-                      }}
-                    />
-                  ) : (
-                    <div className="my-property-image-placeholder">
-                      No image available
-                    </div>
-                  )}
-
-                  <span className="my-property-type">
-                    {property.property_type}
-                  </span>
-
-                  <span
-                    className={`my-property-status my-property-status-${property.status.toLowerCase()}`}
-                  >
-                    {property.status}
-                  </span>
-                </div>
-
-                <div className="my-property-content">
-                  <h2>{property.title}</h2>
-
-                  <p className="my-property-location">
-                    {property.location}, {property.city}
-                  </p>
-
-                  <p className="my-property-price">
-                    ₹{property.price.toLocaleString("en-IN")}
-                  </p>
-
-                  <div className="my-property-stats">
-                    <span>{property.bedrooms} Beds</span>
-                    <span>{property.bathrooms} Baths</span>
-                    <span>{property.area_sqft} sq.ft</span>
-                  </div>
-
-                  <div className="my-property-footer">
-                    <span>View & manage listing</span>
-                    <span>→</span>
-                  </div>
-                </div>
-              </Link>
-            )
-          })}
+                <button
+                  type="button"
+                  className="property-action-button property-delete-button"
+                  disabled={deletingId === property.id}
+                  onClick={() => handleDelete(property)}
+                >
+                  {deletingId === property.id
+                    ? "Deleting..."
+                    : "Delete"}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

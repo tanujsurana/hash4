@@ -1837,3 +1837,213 @@
     width: 100%;
   }
 }
+/* ========================================
+   MY PROPERTIES PAGE
+======================================== */
+
+.my-properties-page {
+  padding-top: 36px;
+  padding-bottom: 70px;
+}
+
+.my-properties-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.my-properties-header > div {
+  max-width: 620px;
+}
+
+.my-properties-header h1 {
+  margin: 8px 0 8px;
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 700;
+  color: #111;
+}
+
+.my-properties-subtitle {
+  margin: 0;
+  color: #666;
+  font-size: 15px;
+}
+
+.section-eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #777;
+}
+
+.create-property-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 17px;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.create-property-button:hover {
+  background: #292929;
+  transform: translateY(-1px);
+}
+
+/* Summary */
+
+.my-properties-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.summary-number {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Grid */
+
+.my-properties-page .property-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
+}
+
+.my-property-wrapper {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.my-property-wrapper .property-card-link {
+  display: block;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.my-property-wrapper .property-card {
+  height: 100%;
+}
+
+/* Owner controls */
+
+.my-property-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.property-action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid #dedede;
+  border-radius: 8px;
+  background: #fff;
+  color: #222;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.property-action-button:hover {
+  background: #f5f5f5;
+  border-color: #c8c8c8;
+}
+
+.property-delete-button {
+  font-family: inherit;
+  cursor: pointer;
+  color: #b42318;
+}
+
+.property-delete-button:hover {
+  background: #fff1f0;
+  border-color: #f1b7b3;
+}
+
+.property-delete-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.my-properties-action-error {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid #f1b7b3;
+  border-radius: 8px;
+  background: #fff6f5;
+  color: #b42318;
+  font-size: 14px;
+}
+
+/* Empty state */
+
+.my-properties-empty {
+  padding: 55px 25px;
+  border: 1px dashed #d8d8d8;
+  border-radius: 16px;
+  text-align: center;
+  background: #fff;
+}
+
+.my-properties-empty h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.my-properties-empty p {
+  margin: 0 auto 20px;
+  color: #666;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+  .my-properties-page .property-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .my-properties-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .my-properties-page .property-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .create-property-button {
+    width: 100%;
+  }
+}

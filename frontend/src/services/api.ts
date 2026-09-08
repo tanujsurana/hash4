@@ -8,7 +8,8 @@ export async function apiRequest(
 
   const headers = new Headers(options.headers)
 
-  if (!headers.has("Content-Type")) {
+  // Only set JSON content type when the request body is not FormData
+  if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json")
   }
 
@@ -21,8 +22,30 @@ export async function apiRequest(
     headers,
   })
 
+  if (response.status === 401) {
+    localStorage.removeItem("access_token")
+
+    if (
+      window.location.pathname !== "/login" &&
+      window.location.pathname !== "/register"
+    ) {
+      window.location.href = "/login"
+    }
+
+    throw new Error("Session expired")
+  }
+
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`)
+    const errorText = await response.text()
+
+    console.error(
+      `API Error ${response.status}:`,
+      errorText
+    )
+
+    throw new Error(
+      `API request failed: ${response.status}`
+    )
   }
 
   if (response.status === 204) {

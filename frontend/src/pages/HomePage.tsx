@@ -37,7 +37,31 @@ function HomePage() {
   }
 
   useEffect(() => {
-    loadProperties()
+    let cancelled = false
+
+    async function fetchInitialProperties() {
+      try {
+        const data = await apiRequest("/properties")
+
+        if (!cancelled) {
+          setProperties(data)
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Failed to load properties")
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void fetchInitialProperties()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   function handleSearch(event: React.FormEvent<HTMLFormElement>) {
@@ -72,7 +96,7 @@ function HomePage() {
     params.set("sort_by", sortBy)
     params.set("sort_order", sortOrder)
 
-    loadProperties(params.toString())
+    void loadProperties(params.toString())
   }
 
   function handleReset() {
@@ -85,7 +109,7 @@ function HomePage() {
     setSortBy("created_at")
     setSortOrder("desc")
 
-    loadProperties()
+    void loadProperties()
   }
 
   return (

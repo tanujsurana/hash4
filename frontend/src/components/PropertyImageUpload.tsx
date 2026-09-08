@@ -1,5 +1,6 @@
-import { useState } from "react"
-const API_URL = import.meta.env.VITE_API_URL
+import { useRef, useState } from "react"
+
+import { apiRequest } from "../services/api"
 
 type PropertyImageUploadProps = {
   propertyId: number
@@ -13,17 +14,11 @@ function PropertyImageUpload({
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState("")
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   async function handleUpload() {
     if (!file) {
       setMessage("Please choose an image first.")
-      return
-    }
-
-    const token = localStorage.getItem("access_token")
-
-    if (!token) {
-      setMessage("Please login first.")
       return
     }
 
@@ -33,32 +28,38 @@ function PropertyImageUpload({
 
       const formData = new FormData()
 
-      // Must match the FastAPI parameter name: image_file
+      // Must match the FastAPI parameter name
       formData.append("image_file", file)
 
-      const response = await fetch(
-        `${API_URL}/properties/${propertyId}/images`,
+      await apiRequest(
+        `/properties/${propertyId}/images`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           body: formData,
         }
       )
 
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.status}`)
-      }
-
       setMessage("Image uploaded successfully!")
       setFile(null)
+
+      // Clear the file input after successful upload
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
 
       if (onUploadSuccess) {
         onUploadSuccess()
       }
     } catch (error) {
       console.error("Image upload error:", error)
+
+      if (
+        error instanceof Error &&
+        error.message === "Session expired"
+      ) {
+        return
+      }
+
       setMessage("Failed to upload image.")
     } finally {
       setUploading(false)
@@ -68,23 +69,31 @@ function PropertyImageUpload({
   return (
     <div className="image-upload">
       <input
+        ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         onChange={(event) => {
-          const selectedFile = event.target.files?.[0] ?? null
+          const selectedFile =
+            event.target.files?.[0] ?? null
+
           setFile(selectedFile)
+          setMessage("")
         }}
       />
 
       <button
         type="button"
         onClick={handleUpload}
-        disabled={uploading}
+        disabled={uploading || !file}
       >
         {uploading ? "Uploading..." : "Upload Image"}
       </button>
 
-      {message && <p>{message}</p>}
+      {message && (
+        <p className="image-upload-message">
+          {message}
+        </p>
+      )}
     </div>
   )
 }
